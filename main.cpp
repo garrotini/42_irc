@@ -135,11 +135,15 @@ int main(int ac, char *av[])
 
 				std::string welcome = "Welcome to Chat!\n";
 				send(cfd, welcome.c_str(), welcome.size(), 0);
+
+				std::cout << "number of clients connected are: " << clients.size() << std::endl;
 			}
 		}
 
+
+
 		// check existing clients for incoming messages or disconnects
-		//
+
 	}
 
 
