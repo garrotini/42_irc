@@ -44,4 +44,4 @@ to close the program on the client side, type `:q!` just like vim :)
 	- probably next step on our program!
 
 
-
+(cgarrote-foolish test)
