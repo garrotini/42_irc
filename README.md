@@ -19,12 +19,10 @@ to close the program on the client side, type `:q!` just like vim :)
 
 - very basic program (parsing is still a joke!)
 - it creates a server that listens on a certain port
-- it accepts more than 1 client (and up to 10 requests), but only the 1st client is "truly connected" to the server and can send messages to server
+- updated: multiple clients can connect to server, send messages to it and be broadcast to everyone in the chat
 
 ## next:
 
-- if it's easy, try to make other clients connect to the server and talk to it
-	- if it needs to create objects, better implement this later
 - start to organize classes: Server, Client (and Channel later on)
 - take the SERVER INIT out of the main function for a clear, simple and easily readable main function
 
@@ -43,5 +41,3 @@ to close the program on the client side, type `:q!` just like vim :)
 - [yt - Sloan Kelly - Multiple Chat Clients: One Thread](https://youtu.be/dquxuXeZXgo)
 	- probably next step on our program!
 
-
-(cgarrote-foolish test)
