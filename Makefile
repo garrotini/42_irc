@@ -23,9 +23,5 @@ re: fclean all
 
 t: re clean
 	./$(NAME) 5555 pass
-a: re clean
-	./$(NAME) 5556 pass
-b: re clean
-	./$(NAME) 5557 pass
 
 .PHONY: all fclean clean re a
