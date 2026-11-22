@@ -1,17 +1,4 @@
-#include <asm-generic/socket.h>
-#include <cstdio>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <cstring>
-#include <iostream>
-#include <netinet/in.h>
-#include <cstdlib>
-#include <cstring>
-#include <vector>
-#include <sstream>
-
-#define BUFF_SIZE 4096
+#include "server.hpp"
 
 // to be done: SERVER
 // class Server
@@ -21,9 +8,11 @@
 // 		int _port;
 
 // };
+
 // class User
 // {
 // }
+//
 
 int main(int ac, char *av[])
 {
@@ -39,59 +28,23 @@ int main(int ac, char *av[])
 							// having in consideration: 
 							// - ports below 1024 are privileged/reserved ports
 							// - max int port is 65xxx
+	
+	std::string passwd = av[2];
 
 	std::cout << "server will try port :" <<  port << std::endl;
 
-	// SERVER INIT
-	
-	// first create a peer socket/endpoint for communication
-	// AF_INET for IPv4; 
-	// SOCK_STREAM for TCP connection protocol; 
-	// 0 for standard SOCK_STREAM;)
-	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	// PARSER WILL DELIVER: int=port & string=passwd
 
-	if (sock_fd < 0)
+	int sock_fd = server_init(port, passwd);
+
+	if(sock_fd == 0)
 	{
-		std::cerr << "! socket error !" << std::endl;
-		exit(1);
+		std::cerr << "! server init error !" << std::endl;
+		exit (1);
 	}
 
-	// allow immediate port reuse after restart!
-	int reuse = 1;
-	setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+	std::cout << "- - - - -" << std::endl;
 
-	// socket needs to get an address, a place to be accessed
-	// IPv4 localhost, in this case
-	struct sockaddr_in address;
-	memset(&address, 0, sizeof(address));
-	address.sin_family = AF_INET; // IPv4
-	address.sin_addr.s_addr = INADDR_ANY; // in any address, just like 0.0.0.0
-	address.sin_port = htons(port); // converts unsigned short int from host byte order to network byte order
-	
-	if (bind(sock_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)) < 0)
-	{
-		std::cerr << "! bind error !" << std::endl;
-		close(sock_fd);
-		exit(1);
-	}
-
-	int backlog = 10; 	// backlog -> max number of connections 
-						// (can't be bigger than 4096, as described in `/proc/sys/net/core/somaxconn`
-						// new connections stay in line, queued
-						// if connections queue is full, may get an error (ECONNREFUSED)
-						// or they can be retransmitted and later try to connect again
-
-	// listen() will make it a passive socket
-	// it will be used to accept incoming connections using accept() later on
-	if (listen(sock_fd, backlog) < 0)
-	{
-		std::cerr << "! listen error !" << std::endl;
-		close(sock_fd);
-		exit(1);
-	}
-
-	std::cout << "peer socket fd " << sock_fd << " listening on :" << port << std::endl;
-	
 	// define the master set, and then clean it
 	fd_set master;
 	FD_ZERO(&master);
@@ -102,8 +55,6 @@ int main(int ac, char *av[])
 	int maxFd = sock_fd;
 	std::vector<int> clients;
 	bool running = true;
-	
-	std::cout << "- - - - -" << std::endl;
 
 	// create a running server that handles multiple conns
 	while(running)
@@ -124,7 +75,8 @@ int main(int ac, char *av[])
 		// - recv() message from client
 		
 		// if socket at position i is a listening socket, that's an inbound communication
-		// accept a new conection
+		// it's a new connection trying to be established
+		// so, accept this new conection
 		// add the new conn to the list of conn clients
 		// send a welcome message to conn client
 		if (FD_ISSET(sock_fd, &master_dup))
@@ -135,7 +87,7 @@ int main(int ac, char *av[])
 				FD_SET(cfd, &master);
 				clients.push_back(cfd);
 				if (cfd > maxFd)
-					maxFd = cfd;
+					maxFd = cfd; // here number of clients get's updated
 
 				std::string welcome = "Welcome to Chat!\n";
 				send(cfd, welcome.c_str(), welcome.size(), 0);
@@ -209,8 +161,8 @@ int main(int ac, char *av[])
 
 						// ss << "SOCKET #" << sock << " says: " << input << "\r\n" ;
 						ss << "SOCKET #" << sock << " says: " << input ;
-						std::string output = ss.str();
 
+						std::string output = ss.str();
 
 						size_t len = output.size();
 						char msg[len];

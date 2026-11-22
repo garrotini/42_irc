@@ -1,6 +1,6 @@
 
 NAME = ircserv
-SRC	= main.cpp
+SRC	= server.cpp main.cpp
 OBJ	= $(SRC:.cpp=.o)
 CFLAGS 	= -Wall -Wextra -Werror -std=c++98
 CXX	= c++
