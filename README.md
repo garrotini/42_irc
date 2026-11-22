@@ -20,11 +20,13 @@ to close the program on the client side, type `:q!` just like vim :)
 - very basic program (parsing is still a joke!)
 - it creates a server that listens on a certain port
 - updated: multiple clients can connect to server, send messages to it and be broadcast to everyone in the chat
+- server_init() is separated from main function (on server.cpp)
 
 ## next:
 
 - start to organize classes: Server, Client (and Channel later on)
-- take the SERVER INIT out of the main function for a clear, simple and easily readable main function
+- separate the clients section from main function
+- parser (that returns a int=port and string=passwd, that will be used in server_init() )
 
 ## sources:
 
