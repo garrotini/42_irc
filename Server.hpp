@@ -16,7 +16,22 @@
 
 #define BUFF_SIZE 4096
 
-int server_init(int port, std::string passwd);
+class Server
+{
+	private:
+		std::string _pass;
+		int _port;
+		int _sockfd;
+	public:
+		Server();
+
+		void init(int port, std::string passwd);
+		void loop();
+
+		std::string get_pass();
+		int get_sockfd();
+		int get_port();
+};
 
 
 #endif
