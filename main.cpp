@@ -1,10 +1,6 @@
 #include "Server.hpp"
 
-
-
-
-
-// class User
+// class Client
 // {
 // }
 //
@@ -32,18 +28,11 @@ int main(int ac, char *av[])
 	
 	Server server;
 	
-	// if (server.init(port, passwd) == 0)
-	// {
-	// 	std::cerr << "! server listening init error !" << std::endl;
-	// 	exit (1);
-	// }
-	
 	server.init(port, passwd);
 
 	std::cout << "- - - - -" << std::endl;
 	
 	server.loop();
-
 
 	return 0;
 }

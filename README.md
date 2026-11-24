@@ -20,11 +20,13 @@ to close the program on the client side, type `:q!` just like vim :)
 - very basic program (parsing is still a joke!)
 - it creates a server that listens on a certain port
 - updated: multiple clients can connect to server, send messages to it and be broadcast to everyone in the chat
+- main() has been updated: server.init() and server.loop() were created
 
 ## next:
 
 - start to organize classes: Server, Client (and Channel later on)
-- take the SERVER INIT out of the main function for a clear, simple and easily readable main function
+    - read Server.cpp (there's cues/tips there!)
+- first argument parser/check: `./ircserver 5555 <passwd>`
 
 ## sources:
 
@@ -40,4 +42,9 @@ to close the program on the client side, type `:q!` just like vim :)
 	- creates a basic 1 client to server chat
 - [yt - Sloan Kelly - Multiple Chat Clients: One Thread](https://youtu.be/dquxuXeZXgo)
 	- probably next step on our program!
+- [yt - Jacob Sorber - how one thread listens to many sockers with select()](https://youtu.be/Y6pFtgRdUts)
+    - explanation on select(2)
+
+- [yt - Jacob Sorber - getaddrinfo](https://youtu.be/yN6EGfv5Dew)
+    - we might need it for later!
 
