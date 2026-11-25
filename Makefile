@@ -27,4 +27,7 @@ t: re clean
 v: re clean
 	valgrind ./$(NAME) 5555 pass
 
-.PHONY: all fclean clean re t v
+make c:
+	telnet localhost 5555
+
+.PHONY: all fclean clean re t v c
