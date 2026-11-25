@@ -27,6 +27,7 @@ class Server
 		bool 				_running;
 		fd_set 				_master;
 		fd_set 				_master_dup;
+		// std::map<int, std::string> _list; // this would be a client list, key-value pairs with unique keys, each fd(int) will obligatory have a different nick(string)
 
 	public:
 		Server();

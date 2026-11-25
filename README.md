@@ -18,14 +18,17 @@ to close the program on the client side, type `:q!` just like vim :)
 ## notes:
 
 - very basic program (parsing is still a joke!)
-- it creates a server that listens on a certain port
+- `make t` rule re-compiles and runs the program as `./ircserver 5555 pass`
+- `make c` rule creates a standard client as `telnet localhost 5555`
 - updated: multiple clients can connect to server, send messages to it and be broadcast to everyone in the chat
-- main() has been updated: server.init() and server.loop() were created
+- updated: every client can leave the server gracefully with `:q!` and server continues to serve to everyone else
 
 ## next:
 
 - start to organize classes: Server, Client (and Channel later on)
     - read Server.cpp (there's cues/tips there!)
+    - Client hpp and cpp has been created but still not in use
+
 - first argument parser/check: `./ircserver 5555 <passwd>`
 
 ## sources:
