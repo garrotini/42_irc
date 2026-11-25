@@ -10,10 +10,7 @@ client side:
 `telnet localhost <port>` or `nc -C localhost <port>`
 
 for fast tests use:
-`make t`, `make a` and `make b` (to compile the program and immediatly run it on 5555-5557 ports)
-(you will notice you'll get out of available sockets pretty soon!)
-
-to close the program on the client side, type `:q!` just like vim :)
+`make t`, `make c` (to compile the program and immediatly run it on 5555-5557 ports)
 
 ## notes:
 
@@ -21,26 +18,21 @@ to close the program on the client side, type `:q!` just like vim :)
 - `make t` rule re-compiles and runs the program as `./ircserver 5555 pass`
 - `make c` rule creates a standard client as `telnet localhost 5555`
 - updated: multiple clients can connect to server, send messages to it and be broadcast to everyone in the chat
-<<<<<<< HEAD
 - server_init() is separated from main function (on server.cpp)
-=======
 - updated: every client can leave the server gracefully with `:q!` and server continues to serve to everyone else
->>>>>>> cgarrote
 
 ## next:
 
 - start to organize classes: Server, Client (and Channel later on)
-<<<<<<< HEAD
 - separate the clients section from main function
 - parser (that returns a int=port and string=passwd, that will be used in server_init() )
-=======
     - read Server.cpp (there's cues/tips there!)
     - Client hpp and cpp has been created but still not in use
-
 - first argument parser/check: `./ircserver 5555 <passwd>`
->>>>>>> cgarrote
 
 ## sources:
+
+- check the RFC_1459.md file in the root dir
 
 - man pages for socket, bind, listen, accept, write, send, recv
 	- take in consideration the libraries! `man 2 socket` != `man 7 socket`
