@@ -1,6 +1,6 @@
 
 NAME = ircserv
-SRC	= server.cpp main.cpp
+SRC	= Server.cpp main.cpp
 OBJ	= $(SRC:.cpp=.o)
 CFLAGS 	= -Wall -Wextra -Werror -std=c++98
 CXX	= c++
@@ -24,4 +24,10 @@ re: fclean all
 t: re clean
 	./$(NAME) 5555 pass
 
-.PHONY: all fclean clean re a
+v: re clean
+	valgrind ./$(NAME) 5555 pass
+
+make c:
+	telnet localhost 5555
+
+.PHONY: all fclean clean re t v c
