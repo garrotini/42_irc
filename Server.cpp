@@ -2,7 +2,7 @@
 
 // cannonical form
 
-Server::Server(): _pass(""), _port(0), _sockfd(-1), _running(false) {}
+Server::Server(): _pass(""), _port(0), _sockfd(-1), _maxFd(-1), _running(false) {}
 
 Server::Server(const Server &other) { *this = other; } 
 
@@ -78,20 +78,20 @@ void Server::loop()
 {
 	std::cout << "server is listening on :" << _port << std::endl;
 	std::cout << "- - - - -" << std::endl;
-	fd_set master;
-	FD_ZERO(&master);
+	// fd_set master;
+	FD_ZERO(&_master);
+	
+	FD_SET(_sockfd, &_master); // add the listening sock to the master set
 
-	FD_SET(_sockfd, &master); // add the listening sock to the master set
-
-	int maxFd = _sockfd;
+	_maxFd = _sockfd;
 	_running = true;
 
 	// create a running server that handles multiple conns
 	while(_running)
 	{
-		fd_set master_dup = master;
+		_master_dup = _master;
 
-		int socketCount = select(maxFd + 1, &master_dup, NULL, NULL, NULL);
+		int socketCount = select(_maxFd + 1, &_master_dup, NULL, NULL, NULL);
 		if (socketCount < 0)
 		{
 			std::cerr << "! select() failed !" << std::endl;
@@ -99,33 +99,34 @@ void Server::loop()
 		}
 		
 		// new connection
-		if (FD_ISSET(_sockfd, &master_dup))
+		if (FD_ISSET(_sockfd, &_master_dup))
 		{
-			int cfd = accept(_sockfd, NULL, NULL);
-			if (cfd >= 0)
-			{
-				// TODO - A NEW OBJECT OF CLASS CLIENTS NEEDS TO BE CREATED/INSTANTIATED HERE!
-				// this client will receive his cfd, this cfd will identify him inside the backend
-				// client needs _user, _nick and, _cfd
-				// parameterized constructor: nick, user, cfd, signed/not-signed
-				// if (nickname is signed) send 1, otherwise send 0
-				// Client user(_nick,_user, cfd, signed-or-not);
+			new_conn();
+			// int cfd = accept(_sockfd, NULL, NULL);
+			// if (cfd >= 0)
+			// {
+			// 	// TODO - A NEW OBJECT OF CLASS CLIENTS NEEDS TO BE CREATED/INSTANTIATED HERE!
+			// 	// this client will receive his cfd, this cfd will identify him inside the backend
+			// 	// client needs _user, _nick and, _cfd
+			// 	// parameterized constructor: nick, user, cfd, signed/not-signed
+			// 	// if (nickname is signed) send 1, otherwise send 0
+			// 	// Client user(_nick,_user, cfd, signed-or-not);
 				
-				FD_SET(cfd, &master);
-				_clients.push_back(cfd);
-				if (cfd > maxFd)
-					maxFd = cfd; // here number of clients get's updated
+			// 	FD_SET(cfd, &master);
+			// 	_clients.push_back(cfd);
+			// 	if (cfd > maxFd)
+			// 		maxFd = cfd; // here number of clients get's updated
 
 
-				// TODO - create a `welcometochat()` message, from server to all clients 
-				// (at least for debugging!)
-				std::string welcome = "Welcome to Chat!\n";
-				send(cfd, welcome.c_str(), welcome.size(), 0);
+			// 	// TODO - create a `welcometochat()` message, from server to all clients 
+			// 	// (at least for debugging!)
+			// 	std::string welcome = "Welcome to Chat!\n";
+			// 	send(cfd, welcome.c_str(), welcome.size(), 0);
 
-				std::cout << "client connected to fd: " << cfd << std::endl;
-				std::cout << "number of clients connected are: " << _clients.size() << std::endl;
-				std::cout << "- - - - -" << std::endl;
-			}
+			// 	std::cout << "client connected to fd: " << cfd << std::endl;
+			// 	std::cout << "number of clients connected are: " << _clients.size() << std::endl;
+			// 	std::cout << "- - - - -" << std::endl;
+			// }
 		}
 
 		// check existing clients for incoming messages or disconnects
@@ -135,7 +136,7 @@ void Server::loop()
 			bool removed = false;
 
 			// if this sockfd is in the master set, so it want to send messages
-			if (FD_ISSET(sock, &master_dup))
+			if (FD_ISSET(sock, &_master_dup))
 			{
 				// TODO - create a pass_message() to client
 				char buf[BUFF_SIZE];
@@ -148,7 +149,7 @@ void Server::loop()
 					// disconnect the client
 					std::cout << "disconnecting client because bytesIn <= 0" << std::endl;
 					close(sock);
-					FD_CLR(sock, &master);
+					FD_CLR(sock, &_master);
 					_clients.erase(_clients.begin() + i);
 					removed = true;
 				}
@@ -167,7 +168,7 @@ void Server::loop()
 					if (!input.empty() && input.length() == 5 && !strncmp(input.c_str(), ":q!", 3))
 					{
 						close(sock);
-						FD_CLR(sock, &master);
+						FD_CLR(sock, &_master);
 						_clients.erase(_clients.begin() + i);
 						removed = true;
 						std::cout << "client " << sock << " has left the chat" << std::endl;
@@ -211,7 +212,7 @@ void Server::loop()
 	}
 
 	// stop accepting new conns
-	FD_CLR(_sockfd, &master);
+	FD_CLR(_sockfd, &_master);
 	close(_sockfd);
 
 	// send goodbye message to clients and close sockets
@@ -219,9 +220,37 @@ void Server::loop()
 	for (long unsigned sock = 0; sock < _clients.size(); sock++ )
 	{
 		send(sock, goodbye.c_str(), goodbye.size(), MSG_NOSIGNAL);
-		FD_CLR(sock, &master);
+		FD_CLR(sock, &_master);
 		close(sock);
 	}
 	_clients.clear();
 }
 
+void Server::new_conn()
+{
+	int cfd = accept(_sockfd, NULL, NULL);
+	if (cfd >= 0)
+	{
+		// TODO - A NEW OBJECT OF CLASS CLIENTS NEEDS TO BE CREATED/INSTANTIATED HERE!
+		// this client will receive his cfd, this cfd will identify him inside the backend
+		// client needs _user, _nick and, _cfd
+		// parameterized constructor: nick, user, cfd, signed/not-signed
+		// if (nickname is signed) send 1, otherwise send 0
+		// Client user(_nick,_user, cfd, signed-or-not);
+		
+		FD_SET(cfd, &_master);
+		_clients.push_back(cfd);
+		if (cfd > _maxFd)
+			_maxFd = cfd; // here number of clients get's updated
+
+
+		// TODO - create a `welcometochat()` message, from server to all clients 
+		// (at least for debugging!)
+		std::string welcome = "Welcome to Chat!\n";
+		send(cfd, welcome.c_str(), welcome.size(), 0);
+
+		std::cout << "client connected to fd: " << cfd << std::endl;
+		std::cout << "number of clients connected are: " << _clients.size() << std::endl;
+		std::cout << "- - - - -" << std::endl;
+	}
+}

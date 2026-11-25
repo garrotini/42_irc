@@ -23,7 +23,10 @@ class Server
 		int 				_port;
 		int 				_sockfd;
 		std::vector<int> 	_clients;
+		int 				_maxFd;
 		bool 				_running;
+		fd_set 				_master;
+		fd_set 				_master_dup;
 
 	public:
 		Server();
@@ -33,6 +36,8 @@ class Server
 
 		void init(int port, std::string passwd);
 		void loop();
+
+		void new_conn();
 
 		std::string get_pass();
 		int get_sockfd();
