@@ -24,4 +24,7 @@ re: fclean all
 t: re clean
 	./$(NAME) 5555 pass
 
-.PHONY: all fclean clean re a
+v: re clean
+	valgrind ./$(NAME) 5555 pass
+
+.PHONY: all fclean clean re t v
