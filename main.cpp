@@ -30,8 +30,6 @@ int main(int ac, char *av[])
 	
 	server.init(port, passwd);
 
-	std::cout << "- - - - -" << std::endl;
-	
 	server.loop();
 
 	return 0;

@@ -19,11 +19,17 @@
 class Server
 {
 	private:
-		std::string _pass;
-		int _port;
-		int _sockfd;
+		std::string 		_pass;
+		int 				_port;
+		int 				_sockfd;
+		std::vector<int> 	_clients;
+		bool 				_running;
+
 	public:
 		Server();
+		Server(const Server &other);
+		Server& operator=(const Server &other);
+		~Server();
 
 		void init(int port, std::string passwd);
 		void loop();
