@@ -100,36 +100,9 @@ void Server::loop()
 		
 		// new connection
 		if (FD_ISSET(_sockfd, &_master_dup))
-		{
 			new_conn();
-			// int cfd = accept(_sockfd, NULL, NULL);
-			// if (cfd >= 0)
-			// {
-			// 	// TODO - A NEW OBJECT OF CLASS CLIENTS NEEDS TO BE CREATED/INSTANTIATED HERE!
-			// 	// this client will receive his cfd, this cfd will identify him inside the backend
-			// 	// client needs _user, _nick and, _cfd
-			// 	// parameterized constructor: nick, user, cfd, signed/not-signed
-			// 	// if (nickname is signed) send 1, otherwise send 0
-			// 	// Client user(_nick,_user, cfd, signed-or-not);
-				
-			// 	FD_SET(cfd, &master);
-			// 	_clients.push_back(cfd);
-			// 	if (cfd > maxFd)
-			// 		maxFd = cfd; // here number of clients get's updated
 
-
-			// 	// TODO - create a `welcometochat()` message, from server to all clients 
-			// 	// (at least for debugging!)
-			// 	std::string welcome = "Welcome to Chat!\n";
-			// 	send(cfd, welcome.c_str(), welcome.size(), 0);
-
-			// 	std::cout << "client connected to fd: " << cfd << std::endl;
-			// 	std::cout << "number of clients connected are: " << _clients.size() << std::endl;
-			// 	std::cout << "- - - - -" << std::endl;
-			// }
-		}
-
-		// check existing clients for incoming messages or disconnects
+		// check existing clients for incoming/receiving cmds or disconnect calls
 		for (size_t i = 0; i < _clients.size(); )
 		{
 			int sock = _clients[i];
@@ -137,75 +110,8 @@ void Server::loop()
 
 			// if this sockfd is in the master set, so it want to send messages
 			if (FD_ISSET(sock, &_master_dup))
-			{
-				// TODO - create a pass_message() to client
-				char buf[BUFF_SIZE];
-				memset(buf, 0, sizeof(buf));
-
-				ssize_t bytesIn = recv(sock, buf, sizeof(buf) - 1, 0);
-				// std::cout << "number of bytesIn read: " << bytesIn << std::endl;
-				if (bytesIn <= 0)
-				{
-					// disconnect the client
-					std::cout << "disconnecting client because bytesIn <= 0" << std::endl;
-					close(sock);
-					FD_CLR(sock, &_master);
-					_clients.erase(_clients.begin() + i);
-					removed = true;
-				}
-				else
-				{
-					std::string input(buf, bytesIn);
-
-					// std::cout << "input.length(): " << input.length() << std::endl;
-					
-					// ignore "empty" messages
-					// return empty messages won't be written or send to anyone
-					if (!input.empty() && input.length() == 2)
-						break;
-
-					// check if it's quit cmd
-					if (!input.empty() && input.length() == 5 && !strncmp(input.c_str(), ":q!", 3))
-					{
-						close(sock);
-						FD_CLR(sock, &_master);
-						_clients.erase(_clients.begin() + i);
-						removed = true;
-						std::cout << "client " << sock << " has left the chat" << std::endl;
-						std::cout << "- - - - -" << std::endl;
-
-						_running = false;
-						break;
-					}
-
-
-					// otherwise, send message to everyone
-					else
-					{
-						std::ostringstream ss;
-
-						// ss << "SOCKET #" << sock << " says: " << input << "\r\n" ;
-						ss << "SOCKET #" << sock << " says: " << input ;
-
-						std::string output = ss.str();
-
-						size_t len = output.size();
-						char msg[len];
-						strcpy(msg, output.c_str());
-						
-						// message to server
-						std::cout << output;
-						std::cout << "- - - - -" << std::endl;
-
-						for (long unsigned int i = 0; i < _clients.size(); i++)
-						{
-							// message to clients
-							if (_clients[i] != sock)
-								send(_clients[i], msg, sizeof(msg), 0);
-						}
-					}
-				}
-			}
+				removed = recv_cmd(i, removed);
+			
 			if (!removed)
 				i++;
 		}
@@ -225,6 +131,76 @@ void Server::loop()
 	}
 	_clients.clear();
 }
+
+bool Server::recv_cmd(int i, bool removed)
+{
+	int sock = _clients[i];
+	// TODO - create a pass_message() to client
+	char buf[BUFF_SIZE];
+	memset(buf, 0, sizeof(buf));
+
+	ssize_t bytesIn = recv(sock, buf, sizeof(buf) - 1, 0);
+	// std::cout << "number of bytesIn read: " << bytesIn << std::endl;
+	if (bytesIn <= 0)
+	{
+		// disconnect the client
+		std::cout << "disconnecting client because bytesIn <= 0" << std::endl;
+		close(sock);
+		FD_CLR(sock, &_master);
+		_clients.erase(_clients.begin() + i);
+		removed = true;
+	}
+	else
+	{
+		std::string input(buf, bytesIn);
+
+		// std::cout << "input.length(): " << input.length() << std::endl;
+
+		// check if it's quit cmd
+		// TODO: quit cmd closes the entire program now, it must just say leave to server
+		if (!input.empty() && input.length() == 5 && !strncmp(input.c_str(), ":q!", 3))
+		{
+			close(sock);
+			FD_CLR(sock, &_master);
+			_clients.erase(_clients.begin() + i);
+			removed = true;
+			std::cout << "client " << sock << " has left the chat" << std::endl;
+			std::cout << "- - - - -" << std::endl;
+
+			_running = false;
+			// break;
+		}
+
+
+		// otherwise, send message to everyone
+		else if (!input.empty() && input.length() > 2)
+		{
+			std::ostringstream ss;
+
+			// ss << "SOCKET #" << sock << " says: " << input << "\r\n" ;
+			ss << "SOCKET #" << sock << " says: " << input ;
+
+			std::string output = ss.str();
+
+			size_t len = output.size();
+			char msg[len];
+			strcpy(msg, output.c_str());
+
+			// message to server
+			std::cout << output;
+			std::cout << "- - - - -" << std::endl;
+
+			for (long unsigned int i = 0; i < _clients.size(); i++)
+			{
+				// message to clients
+				if (_clients[i] != sock)
+					send(_clients[i], msg, sizeof(msg), 0);
+			}
+		}
+	}
+	return removed;
+}
+
 
 void Server::new_conn()
 {

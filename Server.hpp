@@ -38,6 +38,7 @@ class Server
 		void loop();
 
 		void new_conn();
+		bool recv_cmd(int sock, bool removed);
 
 		std::string get_pass();
 		int get_sockfd();
