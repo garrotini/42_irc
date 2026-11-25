@@ -29,14 +29,15 @@ int			Server::get_sockfd() { return _sockfd; }
 
 void Server::init(int port, std::string passwd)
 {
+	// TODO: init the handler signals!
+	
 	_port = port;
 	_pass = passwd;
 	
 	std::cout << "port: " << _port << std::endl;
 	std::cout << "pass: " << _pass << std::endl;
 	
-	// SERVER INIT
-	
+	// AF_INET for ipv4, SOCK_STREAM for TCP connections
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	(void)passwd;
@@ -78,7 +79,7 @@ void Server::loop()
 {
 	std::cout << "server is listening on :" << _port << std::endl;
 	std::cout << "- - - - -" << std::endl;
-	// fd_set master;
+
 	FD_ZERO(&_master);
 	
 	FD_SET(_sockfd, &_master); // add the listening sock to the master set
@@ -135,12 +136,13 @@ void Server::recv_cmd(int i)
 {
 	int sock = _clients[i];
 
-	// TODO - create a pass_message() to client
 	char buf[BUFF_SIZE];
 	memset(buf, 0, sizeof(buf));
 
 	ssize_t bytesIn = recv(sock, buf, sizeof(buf) - 1, 0);
+
 	// std::cout << "number of bytesIn read: " << bytesIn << std::endl;
+	
 	if (bytesIn <= 0)
 	{
 		// disconnect the client
@@ -149,14 +151,17 @@ void Server::recv_cmd(int i)
 		FD_CLR(sock, &_master);
 		_clients.erase(_clients.begin() + i);
 	}
+
 	else
 	{
+		// TODO: it needs to handle the proper cmd in the buffer (PRIVMSG, JOIN, etc etc)
+		// for now it's just sending messages to everyone else than its own sockfd!
+		
 		std::string input(buf, bytesIn);
 
 		// std::cout << "input.length(): " << input.length() << std::endl;
 
 		// check if it's quit cmd
-		// TODO: quit cmd closes the entire program now, it must just say leave to server
 		if (!input.empty() && input.length() == 5 && !strncmp(input.c_str(), ":q!", 3))
 		{
 			close(sock);
@@ -166,7 +171,6 @@ void Server::recv_cmd(int i)
 			std::cout << "- - - - -" << std::endl;
 
 		}
-
 
 		// otherwise, send message to everyone
 		else if (!input.empty() && input.length() > 2)
@@ -185,9 +189,9 @@ void Server::recv_cmd(int i)
 			std::cout << output;
 			std::cout << "- - - - -" << std::endl;
 
+			// message to all other clients/sockfds
 			for (long unsigned int i = 0; i < _clients.size(); i++)
 			{
-				// message to clients
 				if (_clients[i] != sock)
 					send(_clients[i], msg, sizeof(msg), 0);
 			}
