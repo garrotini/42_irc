@@ -103,17 +103,16 @@ void Server::loop()
 			new_conn();
 
 		// check existing clients for incoming/receiving cmds or disconnect calls
-		for (size_t i = 0; i < _clients.size(); )
+		for (size_t i = 0; i < _clients.size(); i++)
 		{
 			int sock = _clients[i];
-			bool removed = false;
 
 			// if this sockfd is in the master set, so it want to send messages
 			if (FD_ISSET(sock, &_master_dup))
-				removed = recv_cmd(i, removed);
+				recv_cmd(i);
 			
-			if (!removed)
-				i++;
+			// if (!removed)
+			// 	i++;
 		}
 	}
 
@@ -132,9 +131,10 @@ void Server::loop()
 	_clients.clear();
 }
 
-bool Server::recv_cmd(int i, bool removed)
+void Server::recv_cmd(int i)
 {
 	int sock = _clients[i];
+
 	// TODO - create a pass_message() to client
 	char buf[BUFF_SIZE];
 	memset(buf, 0, sizeof(buf));
@@ -148,7 +148,6 @@ bool Server::recv_cmd(int i, bool removed)
 		close(sock);
 		FD_CLR(sock, &_master);
 		_clients.erase(_clients.begin() + i);
-		removed = true;
 	}
 	else
 	{
@@ -163,12 +162,9 @@ bool Server::recv_cmd(int i, bool removed)
 			close(sock);
 			FD_CLR(sock, &_master);
 			_clients.erase(_clients.begin() + i);
-			removed = true;
 			std::cout << "client " << sock << " has left the chat" << std::endl;
 			std::cout << "- - - - -" << std::endl;
 
-			_running = false;
-			// break;
 		}
 
 
@@ -177,7 +173,6 @@ bool Server::recv_cmd(int i, bool removed)
 		{
 			std::ostringstream ss;
 
-			// ss << "SOCKET #" << sock << " says: " << input << "\r\n" ;
 			ss << "SOCKET #" << sock << " says: " << input ;
 
 			std::string output = ss.str();
@@ -198,7 +193,6 @@ bool Server::recv_cmd(int i, bool removed)
 			}
 		}
 	}
-	return removed;
 }
 
 
